@@ -7,6 +7,7 @@ import cascading.operation.expression.ExpressionFilter;
 import cascading.operation.expression.ExpressionFunction;
 import cascading.pipe.Each;
 import cascading.pipe.Pipe;
+import cascading.pipe.assembly.Discard;
 import cascading.tap.Tap;
 import cascading.tuple.Fields;
 
@@ -26,8 +27,20 @@ public class Mapping {
 	 * @see http://docs.cascading.org/cascading/2.5/userguide/html/ch09s07.html
 	 */
 	public static FlowDef filterWithExpression(Tap<?, ?, ?> source, Tap<?, ?, ?> sink) {
-		return null;
-	}
+
+		ExpressionFilter filter =
+				  new ExpressionFilter( "line.indexOf(\"Hadoop\") < 0", String.class );
+		
+		Pipe pipe = new Pipe("filter");
+
+	    Fields line = new Fields( "line" );
+	    pipe = new Each(pipe, line, filter);
+
+	    
+		return FlowDef.flowDef()//
+				.addSource(pipe, source) //
+				.addTail(pipe)//
+				.addSink(pipe, sink);	}
 	
 	/**
 	 * Use a {@link Each} in order to transform every "line" in lowercase.
@@ -40,7 +53,20 @@ public class Mapping {
 	 * @see http://docs.cascading.org/cascading/2.5/userguide/html/ch09s07.html
 	 */
 	public static FlowDef transformWithExpression(Tap<?, ?, ?> source, Tap<?, ?, ?> sink) {
-		return null;
+	    Fields line = new Fields( "line" );
+		ExpressionFunction transform =
+				  new ExpressionFunction( line, "line.toLowerCase()", String.class );
+
+		Pipe pipe = new Pipe("transform");
+
+	    pipe = new Each(pipe, line, transform);
+
+	    
+		return FlowDef.flowDef()//
+				.addSource(pipe, source) //
+				.addTail(pipe)//
+				.addSink(pipe, sink);
+	
 	}
 	
 	/**

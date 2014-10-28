@@ -4,6 +4,7 @@ import cascading.flow.FlowDef;
 import cascading.operation.Aggregator;
 import cascading.operation.Function;
 import cascading.operation.aggregator.Count;
+import cascading.operation.expression.ExpressionFunction;
 import cascading.pipe.Each;
 import cascading.pipe.Every;
 import cascading.pipe.GroupBy;
@@ -29,7 +30,18 @@ public class Reducing {
 	 * @see http://docs.cascading.org/cascading/2.5/userguide/html/ch03s03.html
 	 */
 	public static FlowDef aggregate(Tap<?, ?, ?> source, Tap<?, ?, ?> sink) {
-		return null;
+	    Fields word = new Fields( "word" );
+
+		Pipe pipe = new Pipe("wc");
+		pipe = new GroupBy( pipe, word);
+
+	    pipe = new Every(pipe, word, new Count(), Fields.ALL);
+
+	    
+		return FlowDef.flowDef()//
+				.addSource(pipe, source) //
+				.addTail(pipe)//
+				.addSink(pipe, sink);
 	}
 	
 	/**
@@ -42,6 +54,16 @@ public class Reducing {
 	 * @see http://docs.cascading.org/cascading/2.5/userguide/html/ch08s08.html
 	 */
 	public static FlowDef efficientlyAggregate(Tap<?, ?, ?> source, Tap<?, ?, ?> sink) {
-		return null;
+	    Fields word = new Fields( "word" );
+	    Fields count = new Fields("count");
+	    
+		Pipe pipe = new Pipe("wc");
+		pipe = new CountBy( pipe, word, count);
+
+	    
+		return FlowDef.flowDef()//
+				.addSource(pipe, source) //
+				.addTail(pipe)//
+				.addSink(pipe, sink);
 	}
 }

@@ -1,6 +1,8 @@
 package fr.xebia.cascading.learn.level1;
 
 import cascading.flow.FlowDef;
+import cascading.operation.regex.RegexSplitGenerator;
+import cascading.pipe.Each;
 import cascading.pipe.Pipe;
 import cascading.pipe.assembly.Discard;
 import cascading.pipe.assembly.Rename;
@@ -27,8 +29,17 @@ public class BasicSchemaManipulation {
 	 * @see http://docs.cascading.org/cascading/2.5/userguide/html/ch10s03.html
 	 */
 	public static FlowDef discardField(Tap<?, ?, ?> source, Tap<?, ?, ?> sink) {
-		return null;
-	}
+		Pipe pipe = new Pipe("discard");
+
+	    Fields toDiscard = new Fields( "discardme" );
+	    pipe = new Discard( pipe, toDiscard );
+
+	    
+		return FlowDef.flowDef()//
+				.addSource(pipe, source) //
+				.addTail(pipe)//
+				.addSink(pipe, sink);
+		}
 	
 	/**
 	 * Same logic but we want to {@link Retain} only the "line" field.
@@ -39,7 +50,16 @@ public class BasicSchemaManipulation {
 	 * @see http://docs.cascading.org/cascading/2.5/userguide/html/ch10s05.html
 	 */
 	public static FlowDef retainField(Tap<?, ?, ?> source, Tap<?, ?, ?> sink) {
-		return null;
+		Pipe pipe = new Pipe("retain");
+
+	    Fields toRetain = new Fields( "line" );
+	    pipe = new Retain( pipe, toRetain );
+
+	    
+		return FlowDef.flowDef()//
+				.addSource(pipe, source) //
+				.addTail(pipe)//
+				.addSink(pipe, sink);
 	}
 	
 	/**
@@ -51,7 +71,17 @@ public class BasicSchemaManipulation {
 	 * @see http://docs.cascading.org/cascading/2.5/userguide/html/ch10s04.html
 	 */
 	public static FlowDef renameField(Tap<?, ?, ?> source, Tap<?, ?, ?> sink) {
-		return null;
+		Pipe pipe = new Pipe("rename");
+
+	    Fields renameFrom = new Fields( "renameme" );
+	    Fields renameTo = new Fields( "line" );
+	    pipe = new Rename( pipe, renameFrom, renameTo);
+
+	    
+		return FlowDef.flowDef()//
+				.addSource(pipe, source) //
+				.addTail(pipe)//
+				.addSink(pipe, sink);
 	}
 
 }
