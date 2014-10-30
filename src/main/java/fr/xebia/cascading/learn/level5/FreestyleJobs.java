@@ -1,24 +1,19 @@
 package fr.xebia.cascading.learn.level5;
 
 import cascading.flow.FlowDef;
+import cascading.operation.Filter;
+import cascading.operation.Function;
+import cascading.operation.aggregator.Count;
 import cascading.operation.aggregator.First;
 import cascading.operation.aggregator.Max;
-import cascading.operation.expression.ExpressionFilter;
-import cascading.operation.expression.ExpressionFunction;
-import cascading.operation.regex.RegexFilter;
-import cascading.operation.regex.RegexReplace;
-import cascading.pipe.CoGroup;
+import cascading.operation.regex.RegexSplitGenerator;
 import cascading.pipe.Each;
 import cascading.pipe.Every;
 import cascading.pipe.GroupBy;
 import cascading.pipe.HashJoin;
 import cascading.pipe.Pipe;
-import cascading.pipe.assembly.CountBy;
-import cascading.pipe.assembly.Rename;
-import cascading.pipe.assembly.Retain;
 import cascading.tap.Tap;
 import cascading.tuple.Fields;
-import fr.xebia.cascading.learn.level2.CustomSplitFunction;
 
 /**
  * You now know all the basics operators. Here you will have to compose them by yourself.
@@ -32,7 +27,25 @@ public class FreestyleJobs {
 	 * sink field(s) : "word","count"
 	 */
 	public static FlowDef countWordOccurences(Tap<?, ?, ?> source, Tap<?, ?, ?> sink) {
-		return null;
+		Fields lineField = new Fields("line");
+		Fields wordField = new Fields( "word" );
+		Fields countField = new Fields("count");
+		Pipe assembly = new Pipe("assembly");
+		
+		Function toLowerCase = new ToLowerCaseFunction(lineField);
+		assembly = new Each(assembly, lineField, toLowerCase, Fields.REPLACE);
+		RegexSplitGenerator splitter = new RegexSplitGenerator(wordField, "[\\s\\(\\)\\[\\],.'//]");
+		assembly = new Each(assembly, lineField, splitter, Fields.RESULTS);
+		
+		Filter badStringFilter = new BadStringFilter();
+		assembly = new Each(assembly, wordField, badStringFilter);
+		
+		Pipe wcPipe = new Pipe("wc", assembly);
+		wcPipe = new GroupBy(wcPipe, wordField);
+		wcPipe = new Every(wcPipe, wordField, new Count(), Fields.ALL);
+		
+		return FlowDef.flowDef().addSource(assembly, source)//
+				.addTailSink(wcPipe, sink);
 	}
 	
 	/**
